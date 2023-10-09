@@ -3,7 +3,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Amplify, Hub, Auth } from "aws-amplify";
 import awsConfig from "@/config/awsConfig";
 import { useReduxDispatch, useReduxSelector } from "@/redux/hooks";
-import { setUser, setUserProfile } from "@/redux/features/authSlice";
+import {  setUserProfile } from "@/redux/features/authSlice";
 import { getUserProfile } from "@/service/userApi";
 import { useSelector } from "react-redux";
 import { UserProfile } from "@/types/User";
@@ -36,11 +36,11 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       const path = url.split('?')[0];
       console.log(authContext);
       console.log("test");
-      console.log(
-        authContext.isInitialized &&
-        !path.includes('login') &&
-        !authContext.user
-      );
+      // console.log(
+      //   authContext.isInitialized &&
+      //   !path.includes('login') &&
+      //   !authContext.user
+      // );
       if (
         !authContext.userProfile &&
         !path.includes('login') &&
@@ -70,9 +70,9 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
         switch (event) {
           case "signIn":
             console.log("Signin.......... ", data);
-            dispatch(setUser(data));
+            //dispatch(setUser(data));
             const currentSession = await Auth.currentSession();
-            const hasSavedProfile = !!authContext.userProfile;
+            //const hasSavedProfile = !!authContext.userProfile;
             const userProfile = await getUserProfile(
               currentSession.getIdToken().payload.email,
               currentSession.getIdToken().getJwtToken()
