@@ -30,7 +30,7 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const authContext = useReduxSelector((state) => state.auth);
 
-
+   
   const authCheck = useCallback(
     async (url: string) => {
       const path = url.split('?')[0];
