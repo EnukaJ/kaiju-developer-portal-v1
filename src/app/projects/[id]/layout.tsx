@@ -1,19 +1,18 @@
-import ProjectSideBar from "@/components/ProjectSideBar"
+import ProjectSideBar from '@/components/ProjectSideBar';
 
 export default function ProjectLayout({
   children,
   id,
   name,
 }: {
-  children: React.ReactNode,
-  id:string,
-  name:string
+  children: React.ReactNode;
+  id: string;
+  name: string;
 }) {
-  
   return (
-    <div className="h-full max-h-[100vh] w-full flex flex-row ">
-      <ProjectSideBar  id={id}  name="Beat Kraft"/>
+    <div className='no-scrollbar flex h-full w-full flex-row overflow-y-scroll'>
+      <ProjectSideBar />
       {children}
     </div>
-  )
+  );
 }

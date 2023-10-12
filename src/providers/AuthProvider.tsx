@@ -1,13 +1,10 @@
-import { ReactNode, createContext, useCallback, useContext, useEffect } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Amplify, Hub, Auth } from "aws-amplify";
-import awsConfig from "@/config/awsConfig";
-import { useReduxDispatch, useReduxSelector } from "@/redux/hooks";
-import {  setUserProfile } from "@/redux/features/authSlice";
-import { getUserProfile } from "@/service/userApi";
-import { useSelector } from "react-redux";
-import { UserProfile } from "@/types/User";
-
+import { ReactNode, useCallback, useEffect } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Amplify, Hub, Auth } from 'aws-amplify';
+import awsConfig from '@/config/awsConfig';
+import { useReduxDispatch, useReduxSelector } from '@/redux/hooks';
+import { setUser, setUserProfile } from '@/redux/features/authSlice';
+import { getUserProfile } from '@/service/userApi';
 
 // https://docs.amplify.aws/lib/client-configuration/configuring-amplify-categories/q/platform/js/#scoped-configuration
 Amplify.configure({
@@ -27,20 +24,11 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-
   const authContext = useReduxSelector((state) => state.auth);
 
-   
   const authCheck = useCallback(
     async (url: string) => {
       const path = url.split('?')[0];
-      console.log(authContext);
-      console.log("test");
-      // console.log(
-      //   authContext.isInitialized &&
-      //   !path.includes('login') &&
-      //   !authContext.user
-      // );
       if (
         !authContext.userProfile &&
         !path.includes('login') &&
@@ -56,47 +44,69 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 
   useEffect(() => {
-    console.log('Pathname changed:', pathname);
     authCheck(pathname);
   }, [authCheck, pathname, searchParams]);
 
-
-
   useEffect(() => {
     const unsubscribe = Hub.listen(
-      "auth",
+      'auth',
       async ({ payload: { event, data } }) => {
-        console.log(event, data);
         switch (event) {
-          case "signIn":
-            console.log("Signin.......... ", data);
-            //dispatch(setUser(data));
+          case 'signIn':
+            console.log('Signin.......... ', data);
+            dispatch(setUser(data));
             const currentSession = await Auth.currentSession();
-            //const hasSavedProfile = !!authContext.userProfile;
-            const userProfile = await getUserProfile(
-              currentSession.getIdToken().payload.email,
-              currentSession.getIdToken().getJwtToken()
-            );
+            const currentUser = await Auth.currentAuthenticatedUser()
+            const access_token = currentUser.signInUserSession.idToken.jwtToken;
+            const email = currentSession.getIdToken().payload.email;
+            let res
+
+            console.log(currentUser.signInUserSession.idToken.jwtToken);
+
+            var myHeaders = new Headers();
+            myHeaders.append("Content-Type", "application/json");
+            if (access_token) {
+              myHeaders.append("Authorization", `Bearer ${access_token}`);
+            }
+            try {
+              const exist = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/getUserByEmail?email=${email}`)
+              res = await exist.json();
+            } catch (error) {
+              console.log("user not found");
+            }
+
+
+            if (res.message !== "success") {
+              const addUser = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/addUserByTokenIdI`, {
+                method: "POST",
+                body: JSON.stringify(
+                  {
+                    email: currentSession.getIdToken().payload.email,
+                    idToken: access_token,
+                    isDeveloper: true,
+                  }),
+                headers: myHeaders
+              })
+              res = await addUser.json();
+            }
+
+            const userProfile = res.data
             if (userProfile) {
               dispatch(setUserProfile(userProfile));
             }
-            router.push("/projects");
+            router.push('/projects');
             break;
-          case "signOut":
+          case 'signOut':
             break;
-          case "customOAuthState":
+          case 'customOAuthState':
             break;
         }
       }
     );
-    return unsubscribe;    
+    return unsubscribe;
   }, [dispatch, router, authContext.userProfile]);
 
-  return (
-    <>
-      { children }
-    </>
-  );
+  return <>{children}</>;
 };
 
 export default AuthProvider;

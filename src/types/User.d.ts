@@ -4,7 +4,7 @@ type SocialLink = {
 };
 
 export type UserProfile = {
-  _id: string;
+  id: string;
   name: string;
   email: string;
   username: string;
@@ -12,7 +12,7 @@ export type UserProfile = {
   publicKeys: [
     {
       evm: string;
-    }
+    },
   ];
   ens: string;
   bio: string;

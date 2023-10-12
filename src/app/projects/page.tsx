@@ -1,53 +1,109 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { setTimeout } from "timers/promises";
-import { iProject } from "@/types/Project";
-import { BsGearWideConnected } from 'react-icons/bs';
+import { useRouter } from 'next/navigation';
+import { iProject } from '@/types/Project';
+import { getProjectsByUserId } from '@/service/projectApi';
+import { useReduxDispatch, useReduxSelector } from '@/redux/hooks';
+import { PulseLoader } from 'react-spinners';
+import CreateProjectButton from '@/components/CreateProjectButton';
+import { setSelectedProject } from '@/redux/features/projectsSlice';
+import { networks } from '@/utils/constants';
 
-const getProjects = async (): Promise<iProject[]> => {
-  await setTimeout(3000);
-  return [
-    { id: 'abcd', name: 'ABCD', network: 'Polygon' },
-    { id: 'pqrs', name: 'PQRS', network: 'Aelf' },
-  ];
-};
+const Projects: React.FC = () => {
+  const router = useRouter();
+  const dispatch = useReduxDispatch();
+  const userProfile = useReduxSelector((state) => state.auth.userProfile);
+  const [isLoadingProjects, setIsLoadingProjects] = useState<boolean>(true);
+  const [myProjects, setMyProjects] = useState<iProject[]>([]);
 
-const Projects: React.FC = async () => {
-  const myProjects = await getProjects();
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (userProfile) {
+        const projects = await getProjectsByUserId(userProfile.id);
+        setMyProjects(projects);
+        setIsLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, [userProfile]);
+
+  const onProjectClick = (project: iProject) => {
+    dispatch(setSelectedProject(project));
+    router.push(`projects/${project.id}/overview`);
+  };
 
   return (
-    <div className="h-full w-full flex flex-col px-10">
-      <div className='flex justify-between items-center'>
-        <h1 className='text-[20px] font-semibold'>My Projects</h1>
-        <Link href="projects/create" className="bg-[#605BFF] text-white p-[10px] rounded-[10px] my-5 w-48">+ Create new project</Link>
+    <div className='flex h-full w-full flex-col px-[35px] py-[25px]'>
+      <div className='flex items-center justify-between'>
+        <h1 className='text-[32px]'>My Projects</h1>
+        {myProjects && myProjects.length > 0 && <CreateProjectButton />}
       </div>
-      {myProjects && (
-        <div className='h-full w-full flex flex-row flex-wrap  items-center space-x-10'>
+      {!isLoadingProjects && myProjects && myProjects.length > 0 && (
+        <div className='grid gap-[45px] pt-[52px] sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'>
           {myProjects.map((project) => (
-            <Link href={`projects/${project.id}/overview`} key={project.id}>
-              <div className="h-[110px] w-[200px]  p-4 rounded-[10px] justify-center items-center shadow-xl" >
-                <div className='flex flex-row justify-between'>
-                  <div className='flex flex-row space-x-3' >
-                    <Image
-                      src="/icons/google.svg"
-                      alt="Google"
-                      width={40}
-                      height={40}
-                    />
-                    <h1 className='font-semibold'>{project.name}</h1>
-                  </div>
-                  <Link href={`projects/${project.id}/settings`}>
-                    <BsGearWideConnected size={20} />
-                  </Link>
-
+            <div
+              className='flex min-w-[300px] cursor-pointer flex-col rounded-[10px] p-[18px]
+              shadow-xl transition duration-300 hover:scale-105'
+              onClick={() => onProjectClick(project)}
+              key={project.displayProjectId}
+            >
+              <div className='flex flex-row justify-between'>
+                <div className='flex flex-row space-x-[10px]'>
+                  <Image
+                    src='/beatKraft.png'
+                    alt={project.name}
+                    width={64}
+                    height={64}
+                    className='rounded-[5px]'
+                  />
+                  <h1 className='text-[20px]'>{project.name}</h1>
                 </div>
-                <div className='mt-3'>
-                  <h1>Network : {project.network}</h1>
-                  <h1>Project ID : {project.id}</h1>
-                </div>
+                <Link href={`projects/${project.id}/settings`}>
+                  <Image
+                    src='/icons/gear.svg'
+                    alt='Settings'
+                    width={24}
+                    height={24}
+                  />
+                </Link>
               </div>
-            </Link>
+              <div className='mt-[17px]'>
+                <h1>
+                  Network :{' '}
+                  {
+                    networks.find(
+                      (network) => network.value === project?.blockchain
+                    )?.name
+                  }
+                </h1>
+                <h1>Project ID : {project.displayProjectId}</h1>
+              </div>
+            </div>
           ))}
+        </div>
+      )}
+      {!isLoadingProjects && (!myProjects || myProjects.length) <= 0 && (
+        <div className='flex flex-1 flex-col items-center justify-center space-y-[16px]'>
+          <Image
+            src='/images/projectsEmpty.svg'
+            alt='Create'
+            width={250}
+            height={250}
+            className='rounded-[5px]'
+          />
+          <label className='text-[16px] text-gray-500'>
+            You do not have any projects
+          </label>
+          <CreateProjectButton />
+        </div>
+      )}
+      {isLoadingProjects && (
+        <div className='flex flex-1 flex-col items-center justify-center space-y-[16px]'>
+          <PulseLoader size={30} color='#605BFF' />
         </div>
       )}
     </div>

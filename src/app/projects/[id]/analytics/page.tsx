@@ -4,9 +4,11 @@ type ProjectAnalyticsProps = {
   };
 };
 
-const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({ params: { id } }) => {
+const ProjectAnalytics: React.FC<ProjectAnalyticsProps> = ({
+  params: { id },
+}) => {
   return (
-    <div className="h-full w-full flex flex-col justify-center items-center">
+    <div className='flex h-full w-full flex-col items-center justify-center'>
       Project {id} analytics
     </div>
   );

@@ -1,25 +1,31 @@
-import { Auth } from "aws-amplify";
- 
+import { Auth } from 'aws-amplify';
+
 export const fetchWithHeader = async (
   path: string,
   method: string,
-  body?: any
+  body?: any,
+  contentType: string = 'application/json'
 ) => {
-  var myHeaders = new Headers();
-  myHeaders.append("Content-Type", "application/json");
-  const currentUser = await Auth.currentAuthenticatedUser()
+  const myHeaders = new Headers();
+  myHeaders.append('Content-Type', contentType);
+
+  const currentUser = await Auth.currentAuthenticatedUser();
   const access_token = currentUser.signInUserSession.idToken.jwtToken;
+
   if (access_token) {
-    myHeaders.append("Authorization", `Bearer ${access_token}`);
+    myHeaders.append('Authorization', `Bearer ${access_token}`);
   }
 
-  var requestOptions = {
+  const requestOptions = {
     method: method,
     headers: myHeaders,
     body: body ? JSON.stringify(body) : undefined,
   };
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}${path}`, requestOptions);
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}${path}`,
+    requestOptions
+  );
   const responseJson = await response.json();
   return responseJson;
 };

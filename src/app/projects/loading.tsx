@@ -1,6 +1,6 @@
 const ProjectsLoading: React.FC = () => {
   return (
-    <div className="flex flex-col justify-center items-center">
+    <div className='flex flex-col items-center justify-center'>
       Loading projects...
     </div>
   );

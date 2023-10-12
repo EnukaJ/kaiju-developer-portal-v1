@@ -6,7 +6,7 @@ type ProjectEconomyProps = {
 
 const ProjectEconomy: React.FC<ProjectEconomyProps> = ({ params: { id } }) => {
   return (
-    <div className="h-full w-full flex flex-col justify-center items-center">
+    <div className='flex h-full w-full flex-col items-center justify-center'>
       Project {id} economy
     </div>
   );
