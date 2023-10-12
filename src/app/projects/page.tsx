@@ -54,7 +54,7 @@ const Projects: React.FC = () => {
               <div className='flex flex-row justify-between'>
                 <div className='flex flex-row space-x-[10px]'>
                   <Image
-                    src='/beatKraft.png'
+                    src={project.logo}
                     alt={project.name}
                     width={64}
                     height={64}

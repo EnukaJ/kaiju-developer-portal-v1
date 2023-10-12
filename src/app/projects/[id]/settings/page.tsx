@@ -29,7 +29,7 @@ type ProjectSettingsProps = {
   };
 };
 
-const blockchains = [{ name: 'Polygon' }];
+const blockchains = [{ name: 'Polygon Mumbai' }];
 
 const ProjectSettings: React.FC<ProjectSettingsProps> = () => {
   const router = useRouter();
