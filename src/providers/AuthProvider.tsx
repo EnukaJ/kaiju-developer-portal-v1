@@ -4,7 +4,7 @@ import { Amplify, Hub, Auth } from 'aws-amplify';
 import awsConfig from '@/config/awsConfig';
 import { useReduxDispatch, useReduxSelector } from '@/redux/hooks';
 import { setUser, setUserProfile } from '@/redux/features/authSlice';
-import { getUserProfile } from '@/service/userApi';
+import { getUserProfileByEmail,addUserByTokenIdI } from '@/service/userApi';
 
 // https://docs.amplify.aws/lib/client-configuration/configuring-amplify-categories/q/platform/js/#scoped-configuration
 Amplify.configure({
@@ -60,39 +60,16 @@ const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
             const access_token = currentUser.signInUserSession.idToken.jwtToken;
             const email = currentSession.getIdToken().payload.email;
             let res
-
-            console.log(currentUser.signInUserSession.idToken.jwtToken);
-
-            var myHeaders = new Headers();
-            myHeaders.append("Content-Type", "application/json");
-            if (access_token) {
-              myHeaders.append("Authorization", `Bearer ${access_token}`);
-            }
-            try {
-              const exist = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/getUserByEmail?email=${email}`)
-              res = await exist.json();
-            } catch (error) {
-              console.log("user not found");
+            const exist = await getUserProfileByEmail(email)
+            res= exist.data
+            if (exist.message !== "success") {
+              const addUser = addUserByTokenIdI(currentSession.getIdToken().payload.email,access_token,true)              
+              res = addUser
             }
 
-
-            if (res.message !== "success") {
-              const addUser = await fetch(`${process.env.NEXT_PUBLIC_API_URL}user/addUserByTokenIdI`, {
-                method: "POST",
-                body: JSON.stringify(
-                  {
-                    email: currentSession.getIdToken().payload.email,
-                    idToken: access_token,
-                    isDeveloper: true,
-                  }),
-                headers: myHeaders
-              })
-              res = await addUser.json();
-            }
-
-            const userProfile = res.data
+            const userProfile = res
             if (userProfile) {
-              dispatch(setUserProfile(userProfile));
+              dispatch(setUserProfile(await userProfile));
             }
             router.push('/projects');
             break;
