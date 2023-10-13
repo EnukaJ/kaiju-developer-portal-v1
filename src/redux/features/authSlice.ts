@@ -28,7 +28,7 @@ export const counterSlice = createSlice({
     setUserProfile: (state, action: PayloadAction<UserProfile>) => {
       state.userProfile = action.payload;
     },
-    resetAuth: (state, action: PayloadAction<AWSUser>) => {
+    resetAuth: (state) => {
       state.userProfile = undefined;
       state.user = undefined;
       state.isInitialized = false;
